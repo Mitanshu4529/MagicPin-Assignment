@@ -1,0 +1,24 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# IDE & Editor configs
+.claude/
+.vscode/
+.idea/
+.DS_Store
+
+# Temporary scratch & inspection scripts
+_smoke.py
+_http_smoke.py
+_inspect_pairs.py
+
+# Local environment variables
+.env
