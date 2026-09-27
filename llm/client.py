@@ -16,6 +16,21 @@ DEFAULT_TIMEOUT = 25
 
 class LLMClient:
     def __init__(self):
+        # Auto-load .env if present
+        env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        if os.path.exists(env_file):
+            try:
+                with open(env_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            k, v = k.strip(), v.strip().strip("'\"")
+                            if k not in os.environ:
+                                os.environ[k] = v
+            except Exception:
+                pass
+
         self.provider = os.getenv("LLM_PROVIDER", "").lower()
         self.api_key = (
             os.getenv("LLM_API_KEY")
@@ -149,7 +164,7 @@ class LLMClient:
         return data["choices"][0]["message"]["content"]
 
     def _call_groq(self, prompt: str, system: Optional[str], max_tokens: int, temperature: float) -> str:
-        model = self.model or "llama-3.1-70b-versatile"
+        model = self.model or "openai/gpt-oss-120b"
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -158,7 +173,11 @@ class LLMClient:
         req = urlrequest.Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps({"model": model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}).encode("utf-8"),
-            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
         )
         resp = urlrequest.urlopen(req, timeout=DEFAULT_TIMEOUT)
         data = json.loads(resp.read().decode("utf-8"))
